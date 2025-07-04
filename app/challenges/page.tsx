@@ -20,7 +20,7 @@ const contract = new ethers.Contract(CONTRACT_ADDRESS, abi, provider);
 async function getChallenge() {
   const challenges = await contract.getChallenges();
   const pinata =
-    "https://turquoise-neighbouring-nightingale-673.mypinata.cloud/ipfs/";
+    "https://copper-left-cephalopod-174.mypinata.cloud/ipfs/";
   try {
     const challengeObject = await Promise.all(
       challenges.map(async (challenge: any[]) => {

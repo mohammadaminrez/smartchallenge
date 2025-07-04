@@ -10,7 +10,7 @@ import SubmissionForm from "@/components/ui/SubmissionForm";
 const apiUrl =
   process.env.NODE_ENV === "development"
     ? "http://localhost:3000/api"
-    : "https://smartchallenge.vercel.app/api";
+    : "https://smartchallenge-fgbjwie69-mohammadaminrezs-projects.vercel.app/api";
 
 const provider = new ethers.InfuraProvider(
   process.env.ETHEREUM_NETWORK,
@@ -22,7 +22,7 @@ const contract = new ethers.Contract(CONTRACT_ADDRESS, abi, provider);
 async function getChallengeByID(id: string) {
   const challenges = await contract.getChallenges();
   const pinata =
-    "https://turquoise-neighbouring-nightingale-673.mypinata.cloud/ipfs/";
+    "https://copper-left-cephalopod-174.mypinata.cloud/ipfs/";
   try {
     const challengeObject = await Promise.all(
       challenges.map(async (challenge: any[]) => {
