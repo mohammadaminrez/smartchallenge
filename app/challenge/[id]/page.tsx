@@ -7,6 +7,8 @@ import InvisibleDiv from "@/components/ui/InvisibleDiv";
 import Link from "next/link";
 import SubmissionForm from "@/components/ui/SubmissionForm";
 
+export const dynamic = "force-dynamic";
+
 const apiUrl =
   process.env.NODE_ENV === "development"
     ? "http://localhost:3000/api"
