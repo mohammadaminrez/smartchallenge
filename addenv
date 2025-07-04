@@ -1,0 +1,7 @@
+#! /usr/bin/env bash
+
+set -xe
+
+GIT_ROOT=$(git rev-parse --show-toplevel)
+
+env $(xargs < $GIT_ROOT/.env) $@
