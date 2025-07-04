@@ -10,7 +10,7 @@ import SubmissionForm from "@/components/ui/SubmissionForm";
 const apiUrl =
   process.env.NODE_ENV === "development"
     ? "http://localhost:3000/api"
-    : "https://smartchallenge-fgbjwie69-mohammadaminrezs-projects.vercel.app/api";
+    : "https://smartchallenge-steel.vercel.app/api";
 
 const provider = new ethers.InfuraProvider(
   process.env.ETHEREUM_NETWORK,
