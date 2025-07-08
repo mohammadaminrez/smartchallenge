@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { getContract, getSigner } from '../lib/contract';
+import { getContract, getSigner, getChallenge } from '../lib/contract';
 import { ethers } from 'ethers';
 
 interface Challenge {
@@ -20,6 +20,7 @@ export default function ChallengeCard({ challenge, onSolved }: { challenge: Chal
   const [flag, setFlag] = useState('');
   const [msg, setMsg] = useState<string|null>(null);
   const [loading, setLoading] = useState(false);
+  const [submissionFee, setSubmissionFee] = useState<string>('');
 
   useEffect(() => {
     async function loadMeta() {
@@ -28,11 +29,17 @@ export default function ChallengeCard({ challenge, onSolved }: { challenge: Chal
         const data = await res.json();
         setMetadata(data);
       } catch {
-        setMetadata({ name:'Unavailable', description:'', category:'' });
+        setMetadata({ name:'Unavailable', description:'\u0014', category:'\u0014' });
       }
     }
     loadMeta();
-  }, [challenge.ipfsHash]);
+    // Fetch per-challenge submission fee
+    async function fetchFee() {
+      const c = await getChallenge(Number(challenge.challengeId));
+      setSubmissionFee(c.submissionFee.toString());
+    }
+    fetchFee();
+  }, [challenge.ipfsHash, challenge.challengeId]);
 
   useEffect(() => {
     async function check() {
@@ -51,7 +58,7 @@ export default function ChallengeCard({ challenge, onSolved }: { challenge: Chal
     try {
       const signer = await getSigner();
       const c = await getContract(true);
-      const tx = await c.submitFlag(Number(challenge.challengeId), flag, { value: 1 });
+      const tx = await c.submitFlag(Number(challenge.challengeId), flag, { value: submissionFee });
       await tx.wait();
       const sol = await c.isChallengeSolved(await signer.getAddress(), Number(challenge.challengeId));
       setIsSolved(sol);
@@ -113,6 +120,7 @@ export default function ChallengeCard({ challenge, onSolved }: { challenge: Chal
             className="w-full mb-2 bg-[#181c2f] border border-[#2e335a] text-gray-100 px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition disabled:opacity-60"
             disabled={loading}
           />
+          <div className="text-xs text-blue-300 mb-2">Submission Fee: <span className="font-mono">{submissionFee} wei</span></div>
           <button
             onClick={submit}
             disabled={loading || !flag}

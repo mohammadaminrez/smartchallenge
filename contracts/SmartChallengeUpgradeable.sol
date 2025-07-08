@@ -15,6 +15,7 @@ contract SmartChallengeUpgradeable is Initializable, OwnableUpgradeable, UUPSUpg
         uint256 reward;
         string ipfsHash;
         uint8 difficulty; // 1 to 5
+        uint256 submissionFee;
     }
 
     struct Player {
@@ -25,7 +26,6 @@ contract SmartChallengeUpgradeable is Initializable, OwnableUpgradeable, UUPSUpg
     }
 
     uint256 public challengeCounter;
-    uint256 public constant COST_FLAG_SEND = 1 wei;
 
     mapping(uint256 => Challenge) public challenges;
     mapping(address => Player) private players;
@@ -61,18 +61,19 @@ contract SmartChallengeUpgradeable is Initializable, OwnableUpgradeable, UUPSUpg
         bytes32 _flagHash,
         uint256 _reward,
         string calldata _ipfsHash,
-        uint8 _difficulty
+        uint8 _difficulty,
+        uint256 _submissionFee
     ) external onlyOwner {
         require(_reward > 0, "Reward must be > 0");
         require(_difficulty >= 1 && _difficulty <= 5, "Invalid difficulty");
-        challenges[challengeCounter] = Challenge(challengeCounter, _flagHash, _reward, _ipfsHash, _difficulty);
+        challenges[challengeCounter] = Challenge(challengeCounter, _flagHash, _reward, _ipfsHash, _difficulty, _submissionFee);
         emit ChallengeAdded(challengeCounter, _flagHash, _reward, _ipfsHash, _difficulty);
         challengeCounter++;
     }
 
     function submitFlag(uint256 _challengeId, string calldata _flag) external payable whenNotPaused nonReentrant {
-        require(msg.value >= COST_FLAG_SEND, "Insufficient fee");
         Challenge storage c = challenges[_challengeId];
+        require(msg.value >= c.submissionFee, "Insufficient fee");
         require(bytes(_flag).length > 0, "Flag is empty");
         require(!players[msg.sender].solvedChallenges[_challengeId], "Already solved");
 

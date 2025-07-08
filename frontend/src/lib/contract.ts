@@ -25,3 +25,8 @@ export async function getContract(withSigner = false) {
   return contract;
 }
 
+export async function getChallenge(challengeId: number) {
+  const contract = await getContract();
+  return await contract.challenges(challengeId);
+}
+
