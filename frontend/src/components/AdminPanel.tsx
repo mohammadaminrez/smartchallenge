@@ -22,6 +22,10 @@ export default function AdminPanel({ onChallengeAdded }: { onChallengeAdded?: ()
   const [reward, setReward] = useState('');
   const [difficulty, setDifficulty] = useState('');
 
+  const [submissionFee, setSubmissionFee] = useState('');
+  const [feeInput, setFeeInput] = useState('');
+  const [feeLoading, setFeeLoading] = useState(false);
+
   useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
@@ -41,13 +45,34 @@ export default function AdminPanel({ onChallengeAdded }: { onChallengeAdded?: ()
   const addChallenge = async () => {
     setMsg(null);
     setAddLoading(true);
-    if (!name.trim() || !description.trim() || !category.trim() || !flagText.trim()) {
-      setMsg('All fields are required');
+    // Input validations
+    if (!name.trim()) {
+      setMsg('Name is required');
+      setAddLoading(false);
+      return;
+    }
+    if (!description.trim()) {
+      setMsg('Description is required');
+      setAddLoading(false);
+      return;
+    }
+    if (!category.trim()) {
+      setMsg('Category is required');
+      setAddLoading(false);
+      return;
+    }
+    if (!flagText.trim()) {
+      setMsg('Flag text is required');
       setAddLoading(false);
       return;
     }
     if (!reward || isNaN(Number(reward)) || Number(reward) <= 0) {
-      setMsg('Reward must be greater than 0');
+      setMsg('Reward (wei) must be a number greater than 0');
+      setAddLoading(false);
+      return;
+    }
+    if (!submissionFee || isNaN(Number(submissionFee)) || Number(submissionFee) < 0) {
+      setMsg('Submission Fee (wei) must be a number 0 or greater');
       setAddLoading(false);
       return;
     }
@@ -72,7 +97,8 @@ export default function AdminPanel({ onChallengeAdded }: { onChallengeAdded?: ()
         flagHash,
         ethers.parseUnits(reward, 'wei'),
         cid,
-        Number(difficulty)
+        Number(difficulty),
+        submissionFee
       );
       await tx.wait();
       setMsg('Challenge added successfully');
@@ -82,6 +108,7 @@ export default function AdminPanel({ onChallengeAdded }: { onChallengeAdded?: ()
       setFlagText('');
       setReward('');
       setDifficulty('');
+      setSubmissionFee('');
       if (onChallengeAdded) onChallengeAdded();
     } catch (err: any) {
       let errorMsg = err?.reason || err?.message || 'Add challenge failed';
@@ -138,6 +165,24 @@ export default function AdminPanel({ onChallengeAdded }: { onChallengeAdded?: ()
       setMsg(errorMsg);
     } finally {
       setWithdrawing(false);
+    }
+  };
+
+  const updateFee = async () => {
+    setFeeLoading(true);
+    setMsg(null);
+    try {
+      const contract = await getContract(true);
+      const tx = await contract.setSubmissionFee(feeInput);
+      await tx.wait();
+      setSubmissionFee(feeInput);
+      setMsg('Submission fee updated successfully');
+    } catch (err: any) {
+      let errorMsg = err?.reason || err?.message || 'Fee update failed';
+      if (err?.error?.message) errorMsg = err.error.message;
+      setMsg(errorMsg);
+    } finally {
+      setFeeLoading(false);
     }
   };
 
@@ -251,6 +296,21 @@ export default function AdminPanel({ onChallengeAdded }: { onChallengeAdded?: ()
               min={1}
             />
             {msg && msg.toLowerCase().includes('reward') && (
+              <p className="text-red-400 text-xs mt-1">{msg}</p>
+            )}
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1 text-blue-200">Submission Fee (wei)</label>
+            <input
+              type="number"
+              min={0}
+              placeholder="Enter submission fee in wei"
+              value={submissionFee}
+              onChange={e => setSubmissionFee(e.target.value)}
+              className={`w-full bg-[#181c2f] border px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400 transition disabled:opacity-60 shadow-sm ${msg && msg.toLowerCase().includes('submission fee') ? 'border-red-500' : 'border-[#2e335a] text-gray-100'}`}
+              disabled={addLoading}
+            />
+            {msg && msg.toLowerCase().includes('submission fee') && (
               <p className="text-red-400 text-xs mt-1">{msg}</p>
             )}
           </div>
