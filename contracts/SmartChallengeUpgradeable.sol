@@ -124,4 +124,9 @@ contract SmartChallengeUpgradeable is Initializable, OwnableUpgradeable, UUPSUpg
         require(balance > 0, "No balance to withdraw");
         payable(owner()).transfer(balance);
     }
+
+    function deleteChallenge(uint256 challengeId) external onlyOwner {
+        require(challenges[challengeId].reward > 0, "Challenge does not exist");
+        delete challenges[challengeId];
+    }
 }

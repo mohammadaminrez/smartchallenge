@@ -26,6 +26,112 @@ export default function AdminPanel({ onChallengeAdded }: { onChallengeAdded?: ()
   const [feeInput, setFeeInput] = useState('');
   const [feeLoading, setFeeLoading] = useState(false);
 
+  // Add 10 predefined challenge templates
+  const challengeTemplates = [
+    {
+      name: 'Block Explorer',
+      description: 'Analyze a block and extract the miner address.',
+      category: 'Blockchain',
+      flagText: 'block{miner_address}',
+      reward: '10000000000000000',
+      difficulty: '2',
+      submissionFee: '1000000000000000',
+    },
+    {
+      name: 'Hash Hunter',
+      description: 'Find the hash of a given transaction.',
+      category: 'Crypto',
+      flagText: 'flag{tx_hash}',
+      reward: '20000000000000000',
+      difficulty: '3',
+      submissionFee: '2000000000000000',
+    },
+    {
+      name: 'Web3 Login',
+      description: 'Authenticate using your wallet.',
+      category: 'Web',
+      flagText: 'web3{login_success}',
+      reward: '15000000000000000',
+      difficulty: '1',
+      submissionFee: '500000000000000',
+    },
+    {
+      name: 'Gas Saver',
+      description: 'Optimize a contract for lower gas usage.',
+      category: 'Blockchain',
+      flagText: 'flag{gas_optimized}',
+      reward: '25000000000000000',
+      difficulty: '4',
+      submissionFee: '3000000000000000',
+    },
+    {
+      name: 'Signature Check',
+      description: 'Verify a digital signature.',
+      category: 'Crypto',
+      flagText: 'sig{verified}',
+      reward: '12000000000000000',
+      difficulty: '2',
+      submissionFee: '1000000000000000',
+    },
+    {
+      name: 'NFT Detective',
+      description: 'Find the owner of a specific NFT.',
+      category: 'Blockchain',
+      flagText: 'nft{owner}',
+      reward: '18000000000000000',
+      difficulty: '3',
+      submissionFee: '1500000000000000',
+    },
+    {
+      name: 'Smart Contract Audit',
+      description: 'Identify a vulnerability in a contract.',
+      category: 'Blockchain',
+      flagText: 'audit{vuln_found}',
+      reward: '30000000000000000',
+      difficulty: '5',
+      submissionFee: '5000000000000000',
+    },
+    {
+      name: 'Token Tracker',
+      description: 'Track the transfer of a token.',
+      category: 'Crypto',
+      flagText: 'token{transfer}',
+      reward: '11000000000000000',
+      difficulty: '1',
+      submissionFee: '800000000000000',
+    },
+    {
+      name: 'Oracle Quest',
+      description: 'Use an oracle to fetch off-chain data.',
+      category: 'Web',
+      flagText: 'oracle{data_fetched}',
+      reward: '22000000000000000',
+      difficulty: '4',
+      submissionFee: '2500000000000000',
+    },
+    {
+      name: 'Wallet Watcher',
+      description: 'Monitor wallet activity for suspicious transactions.',
+      category: 'Blockchain',
+      flagText: 'wallet{activity}',
+      reward: '17000000000000000',
+      difficulty: '2',
+      submissionFee: '1200000000000000',
+    },
+  ];
+
+  // Add random fill handler
+  const handleRandomFill = () => {
+    const random = challengeTemplates[Math.floor(Math.random() * challengeTemplates.length)];
+    setName(random.name);
+    setDescription(random.description);
+    setCategory(random.category);
+    setFlagText(random.flagText);
+    setReward(random.reward);
+    setDifficulty(random.difficulty);
+    setSubmissionFee(random.submissionFee);
+  };
+
   useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
@@ -231,6 +337,13 @@ export default function AdminPanel({ onChallengeAdded }: { onChallengeAdded?: ()
       {/* Challenge Creation Section */}
       <section className="bg-[#232946] rounded-xl shadow border border-[#2e335a] p-6">
         <h3 className="text-xl font-bold mb-4 text-pink-300">Add New Challenge</h3>
+        <button
+          type="button"
+          onClick={handleRandomFill}
+          className="mb-4 px-4 py-2 bg-blue-700 hover:bg-blue-600 text-white rounded-lg font-semibold shadow"
+        >
+          Random Fill
+        </button>
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-1 text-blue-200">Name</label>

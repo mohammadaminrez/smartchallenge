@@ -25,6 +25,11 @@
       "address": "0xE2E50F832a21BD77b3De3d5E62a150733d4552B8",
       "txHash": "0x4ffaddd855cd5c61a10c2c1c8e950b0add85f8adeb7ee542eeacebdd09fb2f93",
       "kind": "uups"
+    },
+    {
+      "address": "0xa3A26a051026059C1eca229bd2f4922e0CC6313e",
+      "txHash": "0x12e3aac138f58cb87785c78efa666ccf53f29608e922351aa73cb91570612ced",
+      "kind": "uups"
     }
   ],
   "impls": {
@@ -525,6 +530,259 @@
     "9af83e0f472b3c7bb110465b2c2e6771ad2d3a1ef0329c1c252753109cbeaede": {
       "address": "0x21913e4d15b9ea13B8E976376C46cAEA5b3e845A",
       "txHash": "0xc1a1bc651208b5b2d812b98f961d8d34a0ffddfab147175230a0d91fe9be0c55",
+      "layout": {
+        "solcVersion": "0.8.20",
+        "storage": [
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint8",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:63",
+            "retypedFrom": "bool"
+          },
+          {
+            "label": "_initializing",
+            "offset": 1,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:68"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "ContextUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:40"
+          },
+          {
+            "label": "_owner",
+            "offset": 0,
+            "slot": "51",
+            "type": "t_address",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:22"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "52",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:94"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "101",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "ERC1967UpgradeUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/ERC1967/ERC1967UpgradeUpgradeable.sol:169"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "151",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "UUPSUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol:111"
+          },
+          {
+            "label": "_paused",
+            "offset": 0,
+            "slot": "201",
+            "type": "t_bool",
+            "contract": "PausableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol:29"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "202",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "PausableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol:116"
+          },
+          {
+            "label": "_status",
+            "offset": 0,
+            "slot": "251",
+            "type": "t_uint256",
+            "contract": "ReentrancyGuardUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol:38"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "252",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "ReentrancyGuardUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol:88"
+          },
+          {
+            "label": "challengeCounter",
+            "offset": 0,
+            "slot": "301",
+            "type": "t_uint256",
+            "contract": "SmartChallengeUpgradeable",
+            "src": "contracts/SmartChallengeUpgradeable.sol:28"
+          },
+          {
+            "label": "challenges",
+            "offset": 0,
+            "slot": "302",
+            "type": "t_mapping(t_uint256,t_struct(Challenge)1538_storage)",
+            "contract": "SmartChallengeUpgradeable",
+            "src": "contracts/SmartChallengeUpgradeable.sol:30"
+          },
+          {
+            "label": "players",
+            "offset": 0,
+            "slot": "303",
+            "type": "t_mapping(t_address,t_struct(Player)1549_storage)",
+            "contract": "SmartChallengeUpgradeable",
+            "src": "contracts/SmartChallengeUpgradeable.sol:31"
+          },
+          {
+            "label": "playerAddresses",
+            "offset": 0,
+            "slot": "304",
+            "type": "t_array(t_address)dyn_storage",
+            "contract": "SmartChallengeUpgradeable",
+            "src": "contracts/SmartChallengeUpgradeable.sol:32"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]",
+            "numberOfBytes": "32"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]",
+            "numberOfBytes": "1568"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]",
+            "numberOfBytes": "1600"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_struct(Player)1549_storage)": {
+            "label": "mapping(address => struct SmartChallengeUpgradeable.Player)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_bool)": {
+            "label": "mapping(uint256 => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_struct(Challenge)1538_storage)": {
+            "label": "mapping(uint256 => struct SmartChallengeUpgradeable.Challenge)",
+            "numberOfBytes": "32"
+          },
+          "t_string_storage": {
+            "label": "string",
+            "numberOfBytes": "32"
+          },
+          "t_struct(Challenge)1538_storage": {
+            "label": "struct SmartChallengeUpgradeable.Challenge",
+            "members": [
+              {
+                "label": "challengeId",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "flagHash",
+                "type": "t_bytes32",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "reward",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "ipfsHash",
+                "type": "t_string_storage",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "difficulty",
+                "type": "t_uint8",
+                "offset": 0,
+                "slot": "4"
+              },
+              {
+                "label": "submissionFee",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "5"
+              }
+            ],
+            "numberOfBytes": "192"
+          },
+          "t_struct(Player)1549_storage": {
+            "label": "struct SmartChallengeUpgradeable.Player",
+            "members": [
+              {
+                "label": "isRegistered",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "score",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "solvedChallenges",
+                "type": "t_mapping(t_uint256,t_bool)",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "profileHash",
+                "type": "t_string_storage",
+                "offset": 0,
+                "slot": "3"
+              }
+            ],
+            "numberOfBytes": "128"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          }
+        },
+        "namespaces": {}
+      }
+    },
+    "ca11da8c243de67a466e0a90e8d348384da5827beb7b9b79749d6369e89b4928": {
+      "address": "0x370C7178f0f9361a54679690ec913d7D8cD5f709",
+      "txHash": "0xc68736a05454fbc0c10f1cd073fa2aee7e88f10aad441d746b8aaec53c9d9e5e",
       "layout": {
         "solcVersion": "0.8.20",
         "storage": [

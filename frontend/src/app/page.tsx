@@ -28,6 +28,8 @@ export default function Home() {
   const [adminOpen, setAdminOpen] = useState(false);
   const [leaderboardRefresh, setLeaderboardRefresh] = useState(0);
   const [isOwner, setIsOwner] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   // Challenge loading logic as a reusable function
   const loadChallenges = async () => {
@@ -48,6 +50,25 @@ export default function Home() {
       setMessage('Failed to load challenges. Please try again later.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Add deleteChallenge function
+  const deleteChallenge = async (challengeId: string) => {
+    if (!window.confirm('Are you sure you want to delete this challenge?')) return;
+    setDeletingId(challengeId);
+    try {
+      const contract = await getContract(true);
+      const tx = await contract.deleteChallenge(challengeId);
+      await tx.wait();
+      setToast({ message: 'Challenge deleted successfully.', type: 'success' });
+      await loadChallenges();
+    } catch (err: any) {
+      let errorMsg = err?.reason || err?.message || 'Delete failed';
+      if (err?.error?.message) errorMsg = err.error.message;
+      setToast({ message: errorMsg, type: 'error' });
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -116,6 +137,14 @@ export default function Home() {
     init();
   }, [account]);
 
+  // Auto-hide toast after 3 seconds
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
+
   // Show connect wallet page if not connected
   if (!mounted) return null;
   if (!account) {
@@ -145,6 +174,14 @@ export default function Home() {
     <div className="min-h-screen bg-gradient-to-br from-[#181c2f] via-[#232946] to-[#121212] text-gray-100 font-sans">
       <Header account={account} setAccount={setAccount} isOwner={isOwner} />
       <main className="max-w-7xl mx-auto p-6">
+        {/* Toast notification */}
+        {toast && (
+          <div
+            className={`fixed top-6 left-1/2 transform -translate-x-1/2 z-50 px-6 py-3 rounded-lg shadow-lg font-bold text-lg animate-fade-in ${toast.type === 'success' ? 'bg-green-700 text-green-100' : 'bg-red-700 text-red-100'}`}
+          >
+            {toast.message}
+          </div>
+        )}
         {/* Only show Available Challenges if there is no network error message */}
         {message ? (
           <div className="p-5 mb-6 bg-gradient-to-r from-yellow-500/20 to-yellow-700/20 text-yellow-200 border-l-4 border-yellow-400 rounded-lg shadow">
@@ -162,11 +199,19 @@ export default function Home() {
               <div className="text-center text-blue-200 text-lg py-10">No challenges available yet.</div>
             ) : (
               <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-                {challenges.map((ch) => (
-                  <div key={ch.challengeId} className="bg-[#232946] rounded-xl shadow-lg border border-[#2e335a] hover:scale-[1.03] transition-transform duration-200">
-                    <ChallengeCard challenge={ch} onSolved={() => setLeaderboardRefresh(x => x + 1)} />
-                  </div>
-                ))}
+                {challenges
+                  .filter((ch) => ch.reward !== '0' && ch.difficulty !== 0)
+                  .map((ch) => (
+                    <div key={ch.challengeId} className="bg-[#232946] rounded-xl shadow-lg border border-[#2e335a] hover:scale-[1.03] transition-transform duration-200">
+                      <ChallengeCard
+                        challenge={ch}
+                        onSolved={() => setLeaderboardRefresh(x => x + 1)}
+                        isOwner={isOwner}
+                        onDelete={() => deleteChallenge(ch.challengeId)}
+                        deleting={deletingId === ch.challengeId}
+                      />
+                    </div>
+                  ))}
               </div>
             )}
           </section>

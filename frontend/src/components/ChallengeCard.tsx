@@ -12,7 +12,15 @@ interface Challenge {
   difficulty: number;
 }
 
-export default function ChallengeCard({ challenge, onSolved }: { challenge: Challenge, onSolved?: () => void }) {
+interface ChallengeCardProps {
+  challenge: Challenge;
+  onSolved?: () => void;
+  isOwner?: boolean;
+  onDelete?: () => void;
+  deleting?: boolean;
+}
+
+export default function ChallengeCard({ challenge, onSolved, isOwner, onDelete, deleting }: ChallengeCardProps) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
   const [metadata, setMetadata] = useState<{ name:string; description:string; category:string }|null>(null);
@@ -103,6 +111,21 @@ export default function ChallengeCard({ challenge, onSolved }: { challenge: Chal
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
             Solved
           </span>
+        )}
+        {isOwner && (
+          <button
+            onClick={onDelete}
+            className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-600/80 text-xs text-white rounded-full font-semibold shadow-lg hover:bg-red-700/80 transition ml-auto disabled:opacity-60"
+            title="Delete Challenge"
+            disabled={deleting}
+          >
+            {deleting ? (
+              <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" strokeWidth="4" className="opacity-25"/><path d="M4 12a8 8 0 018-8" strokeWidth="4" className="opacity-75"/></svg>
+            ) : (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+            )}
+            {deleting ? 'Deleting…' : 'Delete'}
+          </button>
         )}
       </div>
       <p className="text-sm text-gray-200 mb-2 line-clamp-3">{metadata.description}</p>
