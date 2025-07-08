@@ -15,6 +15,10 @@ interface RawChallenge {
   reward: string;
   ipfsHash: string;
   difficulty: number;
+  category?: string;
+  submissionFee?: string;
+  name: string;
+  description: string;
 }
 
 export default function Home() {
@@ -30,6 +34,12 @@ export default function Home() {
   const [isOwner, setIsOwner] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  // Filter state
+  const [filterCategory, setFilterCategory] = useState('');
+  const [filterRewardMin, setFilterRewardMin] = useState('');
+  const [filterRewardMax, setFilterRewardMax] = useState('');
+  const [filterFeeMin, setFilterFeeMin] = useState('');
+  const [filterFeeMax, setFilterFeeMax] = useState('');
 
   // Challenge loading logic as a reusable function
   const loadChallenges = async () => {
@@ -37,15 +47,30 @@ export default function Home() {
     try {
       const contract = await getContract();
       const raw: any[] = await contract.getChallenges();
-      setChallenges(
-        raw.map((x: any) => ({
-          challengeId: x.challengeId.toString(),
-          flagHash: x.flagHash,
-          reward: x.reward.toString(),
-          ipfsHash: x.ipfsHash,
-          difficulty: Number(x.difficulty),
-        }))
+      // Fetch metadata for all challenges in parallel
+      const challengesWithMeta = await Promise.all(
+        raw.map(async (x: any) => {
+          let meta = { name: '', description: '', category: '' };
+          if (x.ipfsHash) {
+            try {
+              const res = await fetch(`https://copper-left-cephalopod-174.mypinata.cloud/ipfs/${x.ipfsHash}`);
+              meta = await res.json();
+            } catch {}
+          }
+          return {
+            challengeId: x.challengeId.toString(),
+            flagHash: x.flagHash,
+            reward: x.reward.toString(),
+            ipfsHash: x.ipfsHash,
+            difficulty: Number(x.difficulty),
+            submissionFee: x.submissionFee?.toString(),
+            category: meta.category || '',
+            name: meta.name || '',
+            description: meta.description || '',
+          };
+        })
       );
+      setChallenges(challengesWithMeta);
     } catch {
       setMessage('Failed to load challenges. Please try again later.');
     } finally {
@@ -145,6 +170,21 @@ export default function Home() {
     }
   }, [toast]);
 
+  // Extract unique categories from challenges
+  const categories = Array.from(new Set(challenges.map((ch) => ch.category).filter(Boolean)));
+
+  // Filtering logic
+  const filteredChallenges = challenges
+    .filter((ch) => ch.reward !== '0' && ch.difficulty !== 0)
+    .filter((ch) => {
+      if (filterCategory && ch.category !== filterCategory) return false;
+      if (filterRewardMin && Number(ch.reward) < Number(filterRewardMin)) return false;
+      if (filterRewardMax && Number(ch.reward) > Number(filterRewardMax)) return false;
+      if (filterFeeMin && Number(ch.submissionFee || 0) < Number(filterFeeMin)) return false;
+      if (filterFeeMax && Number(ch.submissionFee || 0) > Number(filterFeeMax)) return false;
+      return true;
+    });
+
   // Show connect wallet page if not connected
   if (!mounted) return null;
   if (!account) {
@@ -182,6 +222,79 @@ export default function Home() {
             {toast.message}
           </div>
         )}
+        {/* Filter Controls */}
+        <section className="mb-8 bg-[#232946] border border-[#2e335a] rounded-xl p-4 flex flex-wrap gap-4 items-end">
+          <div>
+            <label className="block text-xs font-semibold text-blue-200 mb-1">Category</label>
+            <select
+              value={filterCategory}
+              onChange={e => setFilterCategory(e.target.value)}
+              className="bg-[#181c2f] border border-[#2e335a] text-gray-100 px-3 py-2 rounded-lg focus:outline-none"
+            >
+              <option value="">All</option>
+              {categories.map(cat => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-blue-200 mb-1">Reward Min (wei)</label>
+            <input
+              type="number"
+              value={filterRewardMin}
+              onChange={e => setFilterRewardMin(e.target.value)}
+              className="bg-[#181c2f] border border-[#2e335a] text-gray-100 px-3 py-2 rounded-lg focus:outline-none w-32"
+              min={0}
+              placeholder="Min"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-blue-200 mb-1">Reward Max (wei)</label>
+            <input
+              type="number"
+              value={filterRewardMax}
+              onChange={e => setFilterRewardMax(e.target.value)}
+              className="bg-[#181c2f] border border-[#2e335a] text-gray-100 px-3 py-2 rounded-lg focus:outline-none w-32"
+              min={0}
+              placeholder="Max"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-blue-200 mb-1">Fee Min (wei)</label>
+            <input
+              type="number"
+              value={filterFeeMin}
+              onChange={e => setFilterFeeMin(e.target.value)}
+              className="bg-[#181c2f] border border-[#2e335a] text-gray-100 px-3 py-2 rounded-lg focus:outline-none w-32"
+              min={0}
+              placeholder="Min"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-blue-200 mb-1">Fee Max (wei)</label>
+            <input
+              type="number"
+              value={filterFeeMax}
+              onChange={e => setFilterFeeMax(e.target.value)}
+              className="bg-[#181c2f] border border-[#2e335a] text-gray-100 px-3 py-2 rounded-lg focus:outline-none w-32"
+              min={0}
+              placeholder="Max"
+            />
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setFilterCategory('');
+              setFilterRewardMin('');
+              setFilterRewardMax('');
+              setFilterFeeMin('');
+              setFilterFeeMax('');
+            }}
+            className="ml-2 px-4 py-2 bg-blue-700 hover:bg-blue-600 text-white rounded-lg font-semibold shadow"
+          >
+            Reset
+          </button>
+        </section>
         {/* Only show Available Challenges if there is no network error message */}
         {message ? (
           <div className="p-5 mb-6 bg-gradient-to-r from-yellow-500/20 to-yellow-700/20 text-yellow-200 border-l-4 border-yellow-400 rounded-lg shadow">
@@ -199,19 +312,17 @@ export default function Home() {
               <div className="text-center text-blue-200 text-lg py-10">No challenges available yet.</div>
             ) : (
               <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-                {challenges
-                  .filter((ch) => ch.reward !== '0' && ch.difficulty !== 0)
-                  .map((ch) => (
-                    <div key={ch.challengeId} className="bg-[#232946] rounded-xl shadow-lg border border-[#2e335a] hover:scale-[1.03] transition-transform duration-200">
-                      <ChallengeCard
-                        challenge={ch}
-                        onSolved={() => setLeaderboardRefresh(x => x + 1)}
-                        isOwner={isOwner}
-                        onDelete={() => deleteChallenge(ch.challengeId)}
-                        deleting={deletingId === ch.challengeId}
-                      />
-                    </div>
-                  ))}
+                {filteredChallenges.map((ch) => (
+                  <div key={ch.challengeId} className="bg-[#232946] rounded-xl shadow-lg border border-[#2e335a] hover:scale-[1.03] transition-transform duration-200">
+                    <ChallengeCard
+                      challenge={ch}
+                      onSolved={() => setLeaderboardRefresh(x => x + 1)}
+                      isOwner={isOwner}
+                      onDelete={() => deleteChallenge(ch.challengeId)}
+                      deleting={deletingId === ch.challengeId}
+                    />
+                  </div>
+                ))}
               </div>
             )}
           </section>
