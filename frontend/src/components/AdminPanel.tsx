@@ -33,7 +33,7 @@ export default function AdminPanel({ onChallengeAdded }: { onChallengeAdded?: ()
       setIsOwner(accounts[0]?.toLowerCase() === ownerAddr.toLowerCase());
       setPaused(await contract.paused());
       const bal = await provider.getBalance(process.env.NEXT_PUBLIC_CONTRACT_ADDRESS!);
-      setBalance(ethers.formatEther(bal));
+      setBalance(bal.toString());
     }
     loadAdminState();
   }, []);
@@ -70,7 +70,7 @@ export default function AdminPanel({ onChallengeAdded }: { onChallengeAdded?: ()
       const flagHash = ethers.keccak256(ethers.toUtf8Bytes(flagText));
       const tx = await contract.addChallenge(
         flagHash,
-        ethers.parseUnits(reward, 18),
+        ethers.parseUnits(reward, 'wei'),
         cid,
         Number(difficulty)
       );
@@ -125,7 +125,7 @@ export default function AdminPanel({ onChallengeAdded }: { onChallengeAdded?: ()
       setMsg('Funds withdrawn successfully.');
       const provider = getProvider();
       const bal = await provider.getBalance(process.env.NEXT_PUBLIC_CONTRACT_ADDRESS!);
-      setBalance(ethers.formatEther(bal));
+      setBalance(bal.toString());
     } catch (err: any) {
       let errorMsg = err?.reason || err?.message || 'Withdrawal failed';
       if (err?.error?.message) errorMsg = err.error.message;
@@ -151,7 +151,7 @@ export default function AdminPanel({ onChallengeAdded }: { onChallengeAdded?: ()
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-col gap-2 sm:gap-0">
             <span className="font-semibold text-blue-200">Contract Balance:</span>
-            <span className="text-yellow-300 font-bold sm:ml-2">{balance} ETH</span>
+            <span className="text-yellow-300 font-bold sm:ml-2">{balance} wei</span>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4 sm:flex-wrap w-full sm:w-auto">
             <div className="flex items-center gap-2">

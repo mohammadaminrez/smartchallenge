@@ -24,7 +24,7 @@ export default function ChallengeCard({ challenge, onSolved }: { challenge: Chal
   useEffect(() => {
     async function loadMeta() {
       try {
-        const res = await fetch(`https://gateway.pinata.cloud/ipfs/${challenge.ipfsHash}`);
+        const res = await fetch(`https://copper-left-cephalopod-174.mypinata.cloud/ipfs/${challenge.ipfsHash}`);
         const data = await res.json();
         setMetadata(data);
       } catch {
@@ -65,13 +65,19 @@ export default function ChallengeCard({ challenge, onSolved }: { challenge: Chal
       } else if (errorMsg.includes('user rejected action') || errorMsg.includes('User denied transaction signature')) {
         errorMsg = 'You rejected the transaction. No changes were made.';
       } else if (errorMsg.includes('insufficient funds')) {
-        errorMsg = 'You do not have enough ETH in your wallet to pay for the transaction (gas and value).';
+        errorMsg = 'You do not have enough wei in your wallet to pay for the transaction (gas and value).';
       } else if (errorMsg.includes('Already solved')) {
         errorMsg = 'You have already solved this challenge.';
       } else if (errorMsg.includes('Flag is empty')) {
         errorMsg = 'Please enter a flag before submitting.';
       } else if (errorMsg.includes('Insufficient fee')) {
         errorMsg = 'You need to pay the required fee to submit a flag.';
+      } else if (
+        e.code === 'CALL_EXCEPTION' ||
+        errorMsg.includes('missing revert data') ||
+        errorMsg.includes('execution reverted')
+      ) {
+        errorMsg = 'Contract does not have enough wei to pay the reward.';
       }
       setMsg(errorMsg);
     } finally {

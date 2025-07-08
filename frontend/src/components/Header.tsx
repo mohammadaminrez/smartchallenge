@@ -84,4 +84,4 @@ export default function Header({ account, setAccount, isOwner }: HeaderProps) {
       )}
     </header>
   );
-} 
+}
