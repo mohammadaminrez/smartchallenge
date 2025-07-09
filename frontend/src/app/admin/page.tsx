@@ -63,7 +63,7 @@ export default function AdminPage() {
           <div className="mb-4 px-4 py-2 rounded-lg font-semibold text-sm bg-red-700/80 text-red-200">
             {error || 'You are not authorized to access this page.'}
           </div>
-          <a href="/" className="mt-4 text-blue-400 hover:underline">Return to Home</a>
+          <a href="/home" className="mt-4 text-blue-400 hover:underline">Return to Home</a>
         </div>
       </div>
     );

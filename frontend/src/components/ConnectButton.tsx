@@ -4,6 +4,7 @@
 import React, { useEffect, useState } from 'react';
 import { ethers } from 'ethers';
 import { getProvider } from '../lib/contract';
+import { useRouter } from 'next/navigation';
 
 interface ConnectButtonProps {
   account: string | null;
@@ -55,9 +56,11 @@ export default function ConnectButton({ account, setAccount, setMessage }: Conne
   }, []);
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const router = useRouter();
   const disconnect = () => {
     setAccount(null);
     setDropdownOpen(false);
+    router.push('/disconnected');
   };
 
   if (account) {

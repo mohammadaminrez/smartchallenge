@@ -29,7 +29,7 @@ export default function Header({ account, setAccount, isOwner }: HeaderProps) {
       {/* Desktop nav */}
       <div className="hidden lg:flex items-center gap-6">
         <a
-          href="/"
+          href="/home"
           className="ml-6 inline-flex items-center gap-2 px-5 py-2 rounded-full bg-gradient-to-r from-blue-500 via-cyan-500 to-blue-400 text-white font-bold shadow-lg hover:from-blue-400 hover:to-cyan-400 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
           style={{ minWidth: 0 }}
         >
@@ -56,7 +56,7 @@ export default function Header({ account, setAccount, isOwner }: HeaderProps) {
       {menuOpen && (
         <div className="lg:hidden absolute top-full left-0 w-full bg-[#181c2f] border-b border-[#232946] shadow-lg flex flex-col items-stretch gap-2 py-4 px-6 animate-fade-in z-30">
           <a
-            href="/"
+            href="/home"
             className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-gradient-to-r from-blue-500 via-cyan-500 to-blue-400 text-white font-bold shadow-lg hover:from-blue-400 hover:to-cyan-400 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
             onClick={() => setMenuOpen(false)}
           >
