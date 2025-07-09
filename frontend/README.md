@@ -1,36 +1,139 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SmartChallenge Frontend
+
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Visit%20App-blue?style=for-the-badge)](https://smartchallenge-mohammadaminrezs-projects.vercel.app/)
+
+**Live Demo:** [https://smartchallenge-mohammadaminrezs-projects.vercel.app/](https://smartchallenge-mohammadaminrezs-projects.vercel.app/)
+
+A modern dApp built with [Next.js](https://nextjs.org), [React](https://react.dev), and [ethers.js](https://docs.ethers.org/) for blockchain-based challenge competitions. This project interacts with a smart contract deployed on the Sepolia testnet and features a user leaderboard, admin dashboard, and dynamic challenge management.
+
+---
+
+## Features
+
+- **Blockchain Integration:** Connect your wallet (MetaMask), interact with a smart contract, and submit solutions to challenges.
+- **Challenge Management:** Admins can add, edit, and delete challenges, with metadata pinned to IPFS via Pinata.
+- **Leaderboard:** Real-time leaderboard ranks users by solved challenges and scores.
+- **Wallet Connection:** Secure wallet connect/disconnect with UI feedback.
+- **Dynamic UI:** Modern, responsive design with Tailwind CSS and custom components.
+- **API Route:** Serverless API for pinning challenge metadata to IPFS.
+
+---
+
+## Project Structure
+
+```
+frontend/
+  ├── src/
+  │   ├── app/
+  │   │   ├── admin/           # Admin dashboard (challenge management)
+  │   │   ├── home/            # Main user homepage (challenge list, leaderboard)
+  │   │   ├── disconnected/    # Wallet disconnected page
+  │   │   ├── api/pinMetadata/ # API route for IPFS pinning
+  │   │   ├── layout.tsx       # Global layout and footer
+  │   │   ├── globals.css      # Global styles (Tailwind)
+  │   │   └── page.tsx         # Redirects to /home
+  │   ├── components/          # Reusable UI components
+  │   │   ├── AdminPanel.tsx
+  │   │   ├── ChallengeCard.tsx
+  │   │   ├── ConnectButton.tsx
+  │   │   ├── Header.tsx
+  │   │   ├── Leaderboard.tsx
+  │   │   └── Modal.tsx
+  │   ├── lib/                 # Blockchain and utility logic
+  │   │   ├── contract.ts      # Ethers.js contract helpers
+  │   │   └── challengeTemplates.ts # Sample challenge templates
+  │   └── abi/                 # Smart contract ABI
+  │       └── SmartChallengeUpgradeable.json
+  ├── public/                  # Static assets (icons, SVGs)
+  ├── package.json             # Project metadata and scripts
+  ├── tsconfig.json            # TypeScript config
+  ├── next.config.ts           # Next.js config
+  ├── postcss.config.mjs       # PostCSS config (Tailwind)
+  └── eslint.config.mjs        # ESLint config
+```
+
+---
 
 ## Getting Started
 
-First, run the development server:
+1. **Install dependencies:**
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+   ```bash
+   npm install
+   # or
+   yarn install
+   ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. **Set up environment variables:**
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+   Create a `.env.local` file in the `frontend/` directory with the following (replace with your values):
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+   ```env
+   NEXT_PUBLIC_CONTRACT_ADDRESS=0xYourContractAddress
+   NEXT_PUBLIC_INFURA_PROJECT_ID=your-infura-id
+   PINATA_API_KEY=your-pinata-key
+   PINATA_SECRET_API_KEY=your-pinata-secret
+   ```
 
-## Learn More
+3. **Run the development server:**
 
-To learn more about Next.js, take a look at the following resources:
+   ```bash
+   npm run dev
+   # or
+   yarn dev
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+   Open [http://localhost:3000](http://localhost:3000) to view the app.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## Main Pages
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- `/home` — Main challenge list, leaderboard, and wallet connect.
+- `/admin` — Admin dashboard (restricted to contract owner).
+- `/disconnected` — Shown when wallet is disconnected.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## Components
+
+- **AdminPanel:** Manage challenges, pause/unpause contract, withdraw funds.
+- **ChallengeCard:** View, solve, and (admin) edit/delete challenges.
+- **Leaderboard:** Displays user rankings and scores.
+- **ConnectButton:** Wallet connect/disconnect UI.
+- **Header:** Navigation, funding, and wallet status.
+- **Modal:** Reusable modal dialog.
+
+---
+
+## Blockchain & API
+
+- **Smart Contract:** Interacts with a deployed contract (see `src/abi/SmartChallengeUpgradeable.json`).
+- **IPFS Pinning:** Uses `/api/pinMetadata` route to pin challenge metadata to IPFS via Pinata.
+- **Ethers.js:** Handles all blockchain interactions.
+
+---
+
+## Scripts
+
+- `npm run dev` — Start development server
+- `npm run build` — Build for production
+- `npm run start` — Start production server
+- `npm run lint` — Run ESLint
+
+---
+
+## Tech Stack
+
+- Next.js 15
+- React 19
+- TypeScript
+- Tailwind CSS
+- Ethers.js 6
+- Pinata (IPFS)
+
+---
+
+## License
+
+MIT
