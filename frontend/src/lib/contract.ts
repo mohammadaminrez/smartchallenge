@@ -30,3 +30,33 @@ export async function getChallenge(challengeId: number) {
   return await contract.challenges(challengeId);
 }
 
+export async function getChallenges() {
+  const contract = await getContract();
+  return await contract.getChallenges();
+}
+
+export function hashFlag(flagText: string) {
+  return ethers.keccak256(ethers.toUtf8Bytes(flagText));
+}
+
+export async function updateChallenge(
+  challengeId: number,
+  flagText: string,
+  newReward: string,
+  newIpfsHash: string,
+  newDifficulty: number,
+  newSubmissionFee: string
+) {
+  const contract = await getContract(true);
+  const flagHash = hashFlag(flagText);
+  const tx = await contract.updateChallenge(
+    challengeId,
+    flagHash,
+    newReward,
+    newIpfsHash,
+    newDifficulty,
+    newSubmissionFee
+  );
+  await tx.wait();
+}
+

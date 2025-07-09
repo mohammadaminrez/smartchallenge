@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
   try {
-    const { name, description, category } = await request.json();
+    const { name, description, category, flagText } = await request.json();
 
     const pinataRes = await fetch("https://api.pinata.cloud/pinning/pinJSONToIPFS", {
       method: "POST",
@@ -15,7 +15,7 @@ export async function POST(request: Request) {
       body: JSON.stringify({
         pinataOptions: { cidVersion: 1 },
         pinataMetadata: { name: `challenge-meta-${Date.now()}` },
-        pinataContent: { name, description, category }
+        pinataContent: { name, description, category, flagText }
       })
     });
 

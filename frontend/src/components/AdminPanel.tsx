@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { getContract, getProvider } from '../lib/contract';
+import { getContract, getProvider, getChallenges, updateChallenge } from '../lib/contract';
 import { ethers } from 'ethers';
 import { challengeTemplates } from '../lib/challengeTemplates';
 
@@ -26,6 +26,8 @@ export default function AdminPanel({ onChallengeAdded }: { onChallengeAdded?: ()
   const [submissionFee, setSubmissionFee] = useState('');
   const [feeInput, setFeeInput] = useState('');
   const [feeLoading, setFeeLoading] = useState(false);
+
+  const [challenges, setChallenges] = useState<any[]>([]);
 
   // Add random fill handler
   const handleRandomFill = () => {
@@ -53,6 +55,14 @@ export default function AdminPanel({ onChallengeAdded }: { onChallengeAdded?: ()
       setBalance(bal.toString());
     }
     loadAdminState();
+  }, []);
+
+  useEffect(() => {
+    async function fetchChallenges() {
+      const list = await getChallenges();
+      setChallenges(list);
+    }
+    fetchChallenges();
   }, []);
 
   const addChallenge = async () => {
@@ -99,7 +109,7 @@ export default function AdminPanel({ onChallengeAdded }: { onChallengeAdded?: ()
       const res = await fetch('/api/pinMetadata', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, description, category }),
+        body: JSON.stringify({ name, description, category, flagText }),
       });
       if (!res.ok) throw new Error('IPFS pin failed');
       const { cid } = await res.json();

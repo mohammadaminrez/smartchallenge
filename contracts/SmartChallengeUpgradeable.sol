@@ -129,4 +129,23 @@ contract SmartChallengeUpgradeable is Initializable, OwnableUpgradeable, UUPSUpg
         require(challenges[challengeId].reward > 0, "Challenge does not exist");
         delete challenges[challengeId];
     }
+
+    function updateChallenge(
+        uint256 challengeId,
+        bytes32 newFlagHash,
+        uint256 newReward,
+        string calldata newIpfsHash,
+        uint8 newDifficulty,
+        uint256 newSubmissionFee
+    ) external onlyOwner {
+        require(newReward > 0, "Reward must be > 0");
+        require(newDifficulty >= 1 && newDifficulty <= 5, "Invalid difficulty");
+        Challenge storage c = challenges[challengeId];
+        require(c.reward > 0, "Challenge does not exist");
+        c.flagHash = newFlagHash;
+        c.reward = newReward;
+        c.ipfsHash = newIpfsHash;
+        c.difficulty = newDifficulty;
+        c.submissionFee = newSubmissionFee;
+    }
 }

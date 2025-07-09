@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { getContract, getSigner, getChallenge } from '../lib/contract';
+import { getContract, getSigner, getChallenge, updateChallenge } from '../lib/contract';
 import { ethers } from 'ethers';
 
 interface Challenge {
@@ -18,17 +18,29 @@ interface ChallengeCardProps {
   isOwner?: boolean;
   onDelete?: () => void;
   deleting?: boolean;
+  onUpdated?: () => void;
+  onShowToast?: (toast: { message: string; type: 'success' | 'error' }) => void;
 }
 
-export default function ChallengeCard({ challenge, onSolved, isOwner, onDelete, deleting }: ChallengeCardProps) {
+export default function ChallengeCard({ challenge, onSolved, isOwner, onDelete, deleting, onUpdated, onShowToast }: ChallengeCardProps) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
-  const [metadata, setMetadata] = useState<{ name:string; description:string; category:string }|null>(null);
+  const [metadata, setMetadata] = useState<{ name: string; description: string; category: string; flagText?: string } | null>(null);
   const [isSolved, setIsSolved] = useState(false);
   const [flag, setFlag] = useState('');
   const [msg, setMsg] = useState<string|null>(null);
   const [loading, setLoading] = useState(false);
   const [submissionFee, setSubmissionFee] = useState<string>('');
+  const [editing, setEditing] = useState(false);
+  const [editFlag, setEditFlag] = useState('');
+  const [editReward, setEditReward] = useState('');
+  const [editIpfs, setEditIpfs] = useState('');
+  const [editDifficulty, setEditDifficulty] = useState('');
+  const [editSubmissionFee, setEditSubmissionFee] = useState('');
+  const [editLoading, setEditLoading] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editCategory, setEditCategory] = useState('');
 
   useEffect(() => {
     async function loadMeta() {
@@ -59,6 +71,19 @@ export default function ChallengeCard({ challenge, onSolved, isOwner, onDelete, 
     }
     check();
   }, [challenge.challengeId]);
+
+  useEffect(() => {
+    if (editing && metadata) {
+      setEditFlag(metadata.flagText || '');
+      setEditReward(challenge.reward.toString());
+      setEditIpfs(challenge.ipfsHash);
+      setEditDifficulty(challenge.difficulty.toString());
+      setEditSubmissionFee(submissionFee);
+      setEditName(metadata.name);
+      setEditDescription(metadata.description);
+      setEditCategory(metadata.category);
+    }
+  }, [editing, challenge, submissionFee, metadata]);
 
   const submit = async () => {
     setLoading(true);
@@ -100,10 +125,51 @@ export default function ChallengeCard({ challenge, onSolved, isOwner, onDelete, 
     }
   };
 
+  const handleSave = async () => {
+    setEditLoading(true);
+    setMsg(null);
+    try {
+      // Pin new metadata to IPFS
+      const res = await fetch('/api/pinMetadata', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: editName, description: editDescription, category: editCategory })
+      });
+      if (!res.ok) throw new Error('IPFS pin failed');
+      const { cid } = await res.json();
+      await updateChallenge(
+        Number(challenge.challengeId),
+        editFlag,
+        editReward,
+        cid,
+        Number(editDifficulty),
+        editSubmissionFee
+      );
+      setEditing(false);
+      // Re-fetch metadata after update
+      try {
+        const metaRes = await fetch(`https://copper-left-cephalopod-174.mypinata.cloud/ipfs/${cid}`);
+        const metaData = await metaRes.json();
+        setMetadata(metaData);
+      } catch {
+        // fallback if fetch fails
+        setMetadata({ name: 'Unavailable', description: '\u0014', category: '\u0014' });
+      }
+      if (onShowToast) onShowToast({ message: 'Challenge updated successfully', type: 'success' });
+      if (onUpdated) onUpdated();
+    } catch (err: any) {
+      let errorMsg = err?.reason || err?.message || 'Update failed';
+      if (onShowToast) onShowToast({ message: errorMsg, type: 'error' });
+      setMsg(errorMsg);
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
   if (!mounted) return null;
   if (!metadata) return <div className="flex items-center justify-center h-40 text-blue-200 animate-pulse">Loading</div>;
   return (
-    <div className="bg-gradient-to-br from-[#232946] to-[#181c2f] border border-[#2e335a] rounded-2xl shadow-xl p-6 flex flex-col min-h-[340px] relative overflow-hidden group transition-transform duration-200 hover:scale-[1.03]">
+    <div className={`bg-gradient-to-br from-[#232946] to-[#181c2f] border border-[#2e335a] rounded-2xl shadow-xl p-6 flex flex-col min-h-[340px] relative overflow-hidden group transition-transform duration-200 hover:scale-[1.03] ${editing ? 'ring-4 ring-blue-400 border-blue-400 bg-[#1a2540]' : ''}`}>
       <div className="flex items-center gap-2 mb-2">
         <h3 className="font-bold text-lg text-blue-200 tracking-tight flex-1">{metadata.name}</h3>
         {isSolved && (
@@ -111,6 +177,26 @@ export default function ChallengeCard({ challenge, onSolved, isOwner, onDelete, 
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
             Solved
           </span>
+        )}
+        {isOwner && !editing && (
+          <button
+            onClick={() => setEditing(true)}
+            className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-600/80 text-xs text-white rounded-full font-semibold shadow-lg hover:bg-blue-700/80 transition ml-auto disabled:opacity-60"
+            title="Edit Challenge"
+            disabled={deleting}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
+            Edit
+          </button>
+        )}
+        {isOwner && editing && (
+          <button
+            onClick={() => setEditing(false)}
+            className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-600/80 text-xs text-white rounded-full font-semibold shadow-lg hover:bg-gray-700/80 transition ml-auto"
+            title="Cancel Edit"
+          >
+            Cancel
+          </button>
         )}
         {isOwner && (
           <button
@@ -134,7 +220,45 @@ export default function ChallengeCard({ challenge, onSolved, isOwner, onDelete, 
         <span className="text-pink-300 font-semibold">Reward: <span className="font-mono">{challenge.reward} wei</span></span>
         <span className="text-yellow-300 font-semibold">Difficulty: {challenge.difficulty}</span>
       </div>
-      {!isSolved ? (
+      <div className="text-xs text-blue-300 mb-2">Submission Fee: <span className="font-mono">{submissionFee} wei</span></div>
+      {editing ? (
+        <>
+          <hr className="my-3 border-blue-700/40" />
+          <div className="space-y-2 mb-2">
+            <div>
+              <label className="block text-xs text-blue-200">Name</label>
+              <input value={editName} onChange={e => setEditName(e.target.value)} className="w-full bg-[#181c2f] border border-[#2e335a] text-gray-100 px-2 py-1 rounded" placeholder="Challenge name" />
+            </div>
+            <div>
+              <label className="block text-xs text-blue-200">Description</label>
+              <textarea value={editDescription} onChange={e => setEditDescription(e.target.value)} className="w-full bg-[#181c2f] border border-[#2e335a] text-gray-100 px-2 py-1 rounded" placeholder="Challenge description" />
+            </div>
+            <div>
+              <label className="block text-xs text-blue-200">Category</label>
+              <input value={editCategory} onChange={e => setEditCategory(e.target.value)} className="w-full bg-[#181c2f] border border-[#2e335a] text-gray-100 px-2 py-1 rounded" placeholder="Category" />
+            </div>
+            <div>
+              <label className="block text-xs text-blue-200">Flag Text</label>
+              <input value={editFlag} onChange={e => setEditFlag(e.target.value)} className="w-full bg-[#181c2f] border border-[#2e335a] text-gray-100 px-2 py-1 rounded" placeholder="Enter new flag text" disabled />
+            </div>
+            <div>
+              <label className="block text-xs text-pink-200">Reward (wei)</label>
+              <input type="number" value={editReward} onChange={e => setEditReward(e.target.value)} className="w-full bg-[#181c2f] border border-[#2e335a] text-gray-100 px-2 py-1 rounded" />
+            </div>
+            <div>
+              <label className="block text-xs text-purple-200">Difficulty</label>
+              <select value={editDifficulty} onChange={e => setEditDifficulty(e.target.value)} className="w-full bg-[#181c2f] border border-[#2e335a] text-gray-100 px-2 py-1 rounded">
+                {[1,2,3,4,5].map(d => <option key={d} value={d}>{d}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs text-blue-300">Submission Fee (wei)</label>
+              <input type="number" value={editSubmissionFee} onChange={e => setEditSubmissionFee(e.target.value)} className="w-full bg-[#181c2f] border border-[#2e335a] text-gray-100 px-2 py-1 rounded" />
+            </div>
+            <button onClick={handleSave} disabled={editLoading} className="w-full bg-green-600 text-white rounded py-2 font-bold mt-2 disabled:opacity-60">{editLoading ? 'Saving…' : 'Save'}</button>
+          </div>
+        </>
+      ) : (
         <div className="mt-auto">
           <input
             value={flag}
@@ -143,7 +267,6 @@ export default function ChallengeCard({ challenge, onSolved, isOwner, onDelete, 
             className="w-full mb-2 bg-[#181c2f] border border-[#2e335a] text-gray-100 px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition disabled:opacity-60"
             disabled={loading}
           />
-          <div className="text-xs text-blue-300 mb-2">Submission Fee: <span className="font-mono">{submissionFee} wei</span></div>
           <button
             onClick={submit}
             disabled={loading || !flag}
@@ -151,12 +274,6 @@ export default function ChallengeCard({ challenge, onSolved, isOwner, onDelete, 
           >
             {loading ? '…' : 'Submit Flag'}
           </button>
-          {msg && <p className={`mt-2 text-sm ${msg === 'Correct!' ? 'text-green-400' : 'text-red-400'}`}>{msg}</p>}
-        </div>
-      ) : (
-        <div className="mt-auto text-green-400 font-bold text-center text-lg flex flex-col items-center gap-1">
-          <svg className="w-8 h-8 mb-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-          Challenge Solved!
         </div>
       )}
     </div>

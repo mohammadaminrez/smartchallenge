@@ -320,6 +320,8 @@ export default function Home() {
                       isOwner={isOwner}
                       onDelete={() => deleteChallenge(ch.challengeId)}
                       deleting={deletingId === ch.challengeId}
+                      onUpdated={loadChallenges}
+                      onShowToast={setToast}
                     />
                   </div>
                 ))}
