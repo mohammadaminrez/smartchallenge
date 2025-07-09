@@ -60,3 +60,8 @@ export async function updateChallenge(
   await tx.wait();
 }
 
+export async function getContractBalance() {
+  const provider = getProvider();
+  return await provider.getBalance(ADDR);
+}
+

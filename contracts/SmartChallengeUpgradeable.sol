@@ -34,6 +34,7 @@ contract SmartChallengeUpgradeable is Initializable, OwnableUpgradeable, UUPSUpg
     event ChallengeSubmitted(address indexed player, uint256 challengeId, bool correct);
     event ChallengeAdded(uint256 indexed challengeId, bytes32 flagHash, uint256 reward, string ipfsHash, uint8 difficulty);
     event PlayerUpdated(address indexed player, string profileHash);
+    event Funded(address indexed from, uint256 amount);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -147,5 +148,14 @@ contract SmartChallengeUpgradeable is Initializable, OwnableUpgradeable, UUPSUpg
         c.ipfsHash = newIpfsHash;
         c.difficulty = newDifficulty;
         c.submissionFee = newSubmissionFee;
+    }
+
+    function fund() external payable {
+        require(msg.value > 0, "Must send ETH to fund");
+        emit Funded(msg.sender, msg.value);
+    }
+
+    receive() external payable {
+        emit Funded(msg.sender, msg.value);
     }
 }

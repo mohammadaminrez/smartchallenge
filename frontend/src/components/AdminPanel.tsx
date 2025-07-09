@@ -5,7 +5,7 @@ import { getContract, getProvider, getChallenges, updateChallenge } from '../lib
 import { ethers } from 'ethers';
 import { challengeTemplates } from '../lib/challengeTemplates';
 
-export default function AdminPanel({ onChallengeAdded }: { onChallengeAdded?: () => void }) {
+export default function AdminPanel({ onChallengeAdded, onShowToast }: { onChallengeAdded?: () => void, onShowToast?: (toast: { message: string; type: 'success' | 'error' }) => void }) {
   const [mounted, setMounted] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
   const [paused, setPaused] = useState(false);
@@ -70,37 +70,51 @@ export default function AdminPanel({ onChallengeAdded }: { onChallengeAdded?: ()
     setAddLoading(true);
     // Input validations
     if (!name.trim()) {
-      setMsg('Name is required');
+      const error = 'Name is required';
+      if (onShowToast) onShowToast({ message: error, type: 'error' });
+      else setMsg(error);
       setAddLoading(false);
       return;
     }
     if (!description.trim()) {
-      setMsg('Description is required');
+      const error = 'Description is required';
+      if (onShowToast) onShowToast({ message: error, type: 'error' });
+      else setMsg(error);
       setAddLoading(false);
       return;
     }
     if (!category.trim()) {
-      setMsg('Category is required');
+      const error = 'Category is required';
+      if (onShowToast) onShowToast({ message: error, type: 'error' });
+      else setMsg(error);
       setAddLoading(false);
       return;
     }
     if (!flagText.trim()) {
-      setMsg('Flag text is required');
+      const error = 'Flag text is required';
+      if (onShowToast) onShowToast({ message: error, type: 'error' });
+      else setMsg(error);
       setAddLoading(false);
       return;
     }
     if (!reward || isNaN(Number(reward)) || Number(reward) <= 0) {
-      setMsg('Reward (wei) must be a number greater than 0');
+      const error = 'Reward (wei) must be a number greater than 0';
+      if (onShowToast) onShowToast({ message: error, type: 'error' });
+      else setMsg(error);
       setAddLoading(false);
       return;
     }
     if (!submissionFee || isNaN(Number(submissionFee)) || Number(submissionFee) < 0) {
-      setMsg('Submission Fee (wei) must be a number 0 or greater');
+      const error = 'Submission Fee (wei) must be a number 0 or greater';
+      if (onShowToast) onShowToast({ message: error, type: 'error' });
+      else setMsg(error);
       setAddLoading(false);
       return;
     }
     if (!difficulty) {
-      setMsg('Difficulty is required');
+      const error = 'Difficulty is required';
+      if (onShowToast) onShowToast({ message: error, type: 'error' });
+      else setMsg(error);
       setAddLoading(false);
       return;
     }
@@ -125,6 +139,7 @@ export default function AdminPanel({ onChallengeAdded }: { onChallengeAdded?: ()
       );
       await tx.wait();
       setMsg('Challenge added successfully');
+      if (onShowToast) onShowToast({ message: 'Challenge added successfully', type: 'success' });
       setName('');
       setDescription('');
       setCategory('');
@@ -139,6 +154,7 @@ export default function AdminPanel({ onChallengeAdded }: { onChallengeAdded?: ()
       if (errorMsg.includes('Reward must be > 0')) errorMsg = 'Reward must be greater than 0';
       if (errorMsg.includes('Pausable: paused')) errorMsg = 'The contract is currently paused.';
       setMsg(errorMsg);
+      if (onShowToast) onShowToast({ message: errorMsg, type: 'error' });
     } finally {
       setAddLoading(false);
     }
@@ -153,6 +169,7 @@ export default function AdminPanel({ onChallengeAdded }: { onChallengeAdded?: ()
       await tx.wait();
       setPaused(!paused);
       setMsg(paused ? 'Contract unpaused successfully' : 'Contract paused successfully');
+      if (onShowToast) onShowToast({ message: paused ? 'Contract unpaused successfully' : 'Contract paused successfully', type: 'success' });
     } catch (err: any) {
       let errorMsg = err?.reason || err?.message || 'Pause/unpause failed';
       if (err?.error?.message) errorMsg = err.error.message;
@@ -160,6 +177,7 @@ export default function AdminPanel({ onChallengeAdded }: { onChallengeAdded?: ()
         errorMsg = 'The contract is currently paused.';
       }
       setMsg(errorMsg);
+      if (onShowToast) onShowToast({ message: errorMsg, type: 'error' });
     } finally {
       setPauseLoading(false);
     }
@@ -173,6 +191,7 @@ export default function AdminPanel({ onChallengeAdded }: { onChallengeAdded?: ()
       const tx = await contract.withdraw();
       await tx.wait();
       setMsg('Funds withdrawn successfully.');
+      if (onShowToast) onShowToast({ message: 'Funds withdrawn successfully.', type: 'success' });
       const provider = getProvider();
       const bal = await provider.getBalance(process.env.NEXT_PUBLIC_CONTRACT_ADDRESS!);
       setBalance(bal.toString());
@@ -186,6 +205,7 @@ export default function AdminPanel({ onChallengeAdded }: { onChallengeAdded?: ()
         errorMsg = 'The contract is currently paused.';
       }
       setMsg(errorMsg);
+      if (onShowToast) onShowToast({ message: errorMsg, type: 'error' });
     } finally {
       setWithdrawing(false);
     }
@@ -200,10 +220,12 @@ export default function AdminPanel({ onChallengeAdded }: { onChallengeAdded?: ()
       await tx.wait();
       setSubmissionFee(feeInput);
       setMsg('Submission fee updated successfully');
+      if (onShowToast) onShowToast({ message: 'Submission fee updated successfully', type: 'success' });
     } catch (err: any) {
       let errorMsg = err?.reason || err?.message || 'Fee update failed';
       if (err?.error?.message) errorMsg = err.error.message;
       setMsg(errorMsg);
+      if (onShowToast) onShowToast({ message: errorMsg, type: 'error' });
     } finally {
       setFeeLoading(false);
     }
@@ -244,11 +266,6 @@ export default function AdminPanel({ onChallengeAdded }: { onChallengeAdded?: ()
             </div>
           </div>
         </div>
-        {msg && (
-          <div className={`px-4 py-2 rounded-lg font-semibold text-sm mt-2 ${msg.includes('success') ? 'bg-green-700/80 text-green-200' : 'bg-red-700/80 text-red-200'}`}>
-            {msg}
-          </div>
-        )}
       </section>
 
       {/* Challenge Creation Section */}

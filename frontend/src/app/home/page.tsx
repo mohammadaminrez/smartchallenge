@@ -80,7 +80,7 @@ export default function Home() {
 
   // Add deleteChallenge function
   const deleteChallenge = async (challengeId: string) => {
-    if (!window.confirm('Are you sure you want to delete this challenge?')) return;
+    // Removed browser-native confirm; confirmation is handled in ChallengeCard modal
     setDeletingId(challengeId);
     try {
       const contract = await getContract(true);
@@ -361,7 +361,7 @@ export default function Home() {
             >
               &times;
             </button>
-            <AdminPanel onChallengeAdded={() => { setAdminOpen(false); loadChallenges(); }} />
+            <AdminPanel onChallengeAdded={() => { setAdminOpen(false); loadChallenges(); }} onShowToast={setToast} />
           </div>
         </div>
       )} */}

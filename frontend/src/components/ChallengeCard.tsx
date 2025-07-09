@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { getContract, getSigner, getChallenge, updateChallenge } from '../lib/contract';
 import { ethers } from 'ethers';
+import { createPortal } from 'react-dom';
 
 interface Challenge {
   challengeId: string;
@@ -22,13 +23,49 @@ interface ChallengeCardProps {
   onShowToast?: (toast: { message: string; type: 'success' | 'error' }) => void;
 }
 
+function Modal({ open, onClose, children }: { open: boolean, onClose: () => void, children: React.ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (open && ref.current) {
+      ref.current.focus();
+    }
+  }, [open]);
+
+  if (!open) return null;
+  return createPortal(
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+      tabIndex={-1}
+      ref={ref}
+      aria-modal="true"
+      role="dialog"
+    >
+      <div
+        className="bg-[#232946] border border-[#2e335a] rounded-xl shadow-2xl p-6 w-full max-w-xs text-center animate-fade-in"
+      >
+        {children}
+      </div>
+      <style jsx>{`
+        .animate-fade-in {
+          animation: fadeInScale 0.2s cubic-bezier(.4,0,.2,1);
+        }
+        @keyframes fadeInScale {
+          from { opacity: 0; transform: scale(0.95);}
+          to { opacity: 1; transform: scale(1);}
+        }
+      `}</style>
+    </div>,
+    document.body
+  );
+}
+
 export default function ChallengeCard({ challenge, onSolved, isOwner, onDelete, deleting, onUpdated, onShowToast }: ChallengeCardProps) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
   const [metadata, setMetadata] = useState<{ name: string; description: string; category: string; flagText?: string } | null>(null);
   const [isSolved, setIsSolved] = useState(false);
   const [flag, setFlag] = useState('');
-  const [msg, setMsg] = useState<string|null>(null);
   const [loading, setLoading] = useState(false);
   const [submissionFee, setSubmissionFee] = useState<string>('');
   const [editing, setEditing] = useState(false);
@@ -41,6 +78,7 @@ export default function ChallengeCard({ challenge, onSolved, isOwner, onDelete, 
   const [editName, setEditName] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const [editCategory, setEditCategory] = useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     async function loadMeta() {
@@ -87,7 +125,6 @@ export default function ChallengeCard({ challenge, onSolved, isOwner, onDelete, 
 
   const submit = async () => {
     setLoading(true);
-    setMsg(null);
     try {
       const signer = await getSigner();
       const c = await getContract(true);
@@ -95,8 +132,12 @@ export default function ChallengeCard({ challenge, onSolved, isOwner, onDelete, 
       await tx.wait();
       const sol = await c.isChallengeSolved(await signer.getAddress(), Number(challenge.challengeId));
       setIsSolved(sol);
-      setMsg(sol ? '🎉 Correct! You solved the challenge.' : 'Incorrect flag. Please try again!');
-      if (sol && onSolved) onSolved();
+      if (sol) {
+        if (onShowToast) onShowToast({ message: '🎉 Correct! You solved the challenge.', type: 'success' });
+        if (onSolved) onSolved();
+      } else {
+        if (onShowToast) onShowToast({ message: 'Incorrect flag. Please try again!', type: 'error' });
+      }
     } catch (e:any) {
       // Handle known errors
       let errorMsg = e.message;
@@ -118,8 +159,10 @@ export default function ChallengeCard({ challenge, onSolved, isOwner, onDelete, 
         errorMsg.includes('execution reverted')
       ) {
         errorMsg = 'Contract does not have enough wei to pay the reward.';
+      } else if (!errorMsg || typeof errorMsg !== 'string') {
+        errorMsg = 'An unknown error occurred. Please try again or contact support.';
       }
-      setMsg(errorMsg);
+      if (onShowToast) onShowToast({ message: errorMsg, type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -127,7 +170,6 @@ export default function ChallengeCard({ challenge, onSolved, isOwner, onDelete, 
 
   const handleSave = async () => {
     setEditLoading(true);
-    setMsg(null);
     try {
       // Pin new metadata to IPFS
       const res = await fetch('/api/pinMetadata', {
@@ -160,7 +202,6 @@ export default function ChallengeCard({ challenge, onSolved, isOwner, onDelete, 
     } catch (err: any) {
       let errorMsg = err?.reason || err?.message || 'Update failed';
       if (onShowToast) onShowToast({ message: errorMsg, type: 'error' });
-      setMsg(errorMsg);
     } finally {
       setEditLoading(false);
     }
@@ -200,7 +241,7 @@ export default function ChallengeCard({ challenge, onSolved, isOwner, onDelete, 
         )}
         {isOwner && (
           <button
-            onClick={onDelete}
+            onClick={() => setShowDeleteConfirm(true)}
             className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-600/80 text-xs text-white rounded-full font-semibold shadow-lg hover:bg-red-700/80 transition ml-auto disabled:opacity-60"
             title="Delete Challenge"
             disabled={deleting}
@@ -275,6 +316,33 @@ export default function ChallengeCard({ challenge, onSolved, isOwner, onDelete, 
             {loading ? '…' : 'Submit Flag'}
           </button>
         </div>
+      )}
+      {showDeleteConfirm && (
+        <Modal open={showDeleteConfirm} onClose={() => setShowDeleteConfirm(false)}>
+          <div className="flex flex-col items-center">
+            <div className="mb-2 text-red-400">
+              <svg width="40" height="40" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" d="M12 9v4m0 4h.01M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9Z" /><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" /></svg>
+            </div>
+            <h2 className="text-lg font-bold text-red-400 mb-2">Are you sure?</h2>
+            <p className="text-sm text-blue-100 mb-4">This action cannot be undone.</p>
+            <div className="flex gap-2 justify-center w-full">
+              <button
+                className="flex-1 px-4 py-2 rounded bg-gray-600 text-white font-semibold hover:bg-gray-700 transition"
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+              <button
+                className="flex-1 px-4 py-2 rounded bg-red-600 text-white font-semibold hover:bg-red-700 transition disabled:opacity-60"
+                onClick={() => { setShowDeleteConfirm(false); if (onDelete) onDelete(); }}
+                disabled={deleting}
+              >
+                {deleting ? 'Deleting…' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </Modal>
       )}
     </div>
   );

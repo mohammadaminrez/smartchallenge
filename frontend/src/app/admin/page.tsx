@@ -11,6 +11,7 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [account, setAccount] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -45,6 +46,14 @@ export default function AdminPage() {
     checkOwner();
   }, []);
 
+  // Auto-hide toast after 3 seconds
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
+
   if (!mounted) return null;
 
   if (loading) {
@@ -73,7 +82,15 @@ export default function AdminPage() {
     <div className="min-h-screen bg-gradient-to-br from-[#181c2f] via-[#232946] to-[#121212] text-gray-100 font-sans">
       <Header account={account} setAccount={setAccount} isOwner={!!isOwner} />
       <main className="max-w-3xl mx-auto p-8">
-        <AdminPanel />
+        {/* Toast notification */}
+        {toast && (
+          <div
+            className={`fixed top-6 left-1/2 transform -translate-x-1/2 z-50 px-6 py-3 rounded-lg shadow-lg font-bold text-lg animate-fade-in ${toast.type === 'success' ? 'bg-green-700 text-green-100' : 'bg-red-700 text-red-100'}`}
+          >
+            {toast.message}
+          </div>
+        )}
+        <AdminPanel onShowToast={setToast} />
         {/* Add more admin sections here in the future */}
       </main>
     </div>
