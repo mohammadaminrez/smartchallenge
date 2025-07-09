@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useEffect, useState, useRef } from 'react';
-import { getContract, getSigner, getChallenge, updateChallenge } from '../lib/contract';
+import { getContract, getSigner, getChallenge, updateChallenge, getPlayerAddresses } from '../lib/contract';
 import { ethers } from 'ethers';
 import { createPortal } from 'react-dom';
+import Modal from './Modal';
 
 interface Challenge {
   challengeId: string;
@@ -21,43 +22,6 @@ interface ChallengeCardProps {
   deleting?: boolean;
   onUpdated?: () => void;
   onShowToast?: (toast: { message: string; type: 'success' | 'error' }) => void;
-}
-
-function Modal({ open, onClose, children }: { open: boolean, onClose: () => void, children: React.ReactNode }) {
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (open && ref.current) {
-      ref.current.focus();
-    }
-  }, [open]);
-
-  if (!open) return null;
-  return createPortal(
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
-      tabIndex={-1}
-      ref={ref}
-      aria-modal="true"
-      role="dialog"
-    >
-      <div
-        className="bg-[#232946] border border-[#2e335a] rounded-xl shadow-2xl p-6 w-full max-w-xs text-center animate-fade-in"
-      >
-        {children}
-      </div>
-      <style jsx>{`
-        .animate-fade-in {
-          animation: fadeInScale 0.2s cubic-bezier(.4,0,.2,1);
-        }
-        @keyframes fadeInScale {
-          from { opacity: 0; transform: scale(0.95);}
-          to { opacity: 1; transform: scale(1);}
-        }
-      `}</style>
-    </div>,
-    document.body
-  );
 }
 
 export default function ChallengeCard({ challenge, onSolved, isOwner, onDelete, deleting, onUpdated, onShowToast }: ChallengeCardProps) {
@@ -79,6 +43,24 @@ export default function ChallengeCard({ challenge, onSolved, isOwner, onDelete, 
   const [editDescription, setEditDescription] = useState('');
   const [editCategory, setEditCategory] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [solvedCount, setSolvedCount] = useState<number | null>(null);
+
+  // Place this at the top level inside your component, after state declarations
+  async function fetchSolvedCount() {
+    let cancelled = false;
+    try {
+      const addresses = await getPlayerAddresses();
+      const contract = await getContract();
+      let count = 0;
+      await Promise.all(addresses.map(async (addr: string) => {
+        const solved = await contract.isChallengeSolved(addr, Number(challenge.challengeId));
+        if (solved) count++;
+      }));
+      if (!cancelled) setSolvedCount(count);
+    } catch {
+      if (!cancelled) setSolvedCount(null);
+    }
+  }
 
   useEffect(() => {
     async function loadMeta() {
@@ -123,6 +105,10 @@ export default function ChallengeCard({ challenge, onSolved, isOwner, onDelete, 
     }
   }, [editing, challenge, submissionFee, metadata]);
 
+  useEffect(() => {
+    fetchSolvedCount();
+  }, [challenge.challengeId]);
+
   const submit = async () => {
     setLoading(true);
     try {
@@ -135,8 +121,9 @@ export default function ChallengeCard({ challenge, onSolved, isOwner, onDelete, 
       if (sol) {
         if (onShowToast) onShowToast({ message: '🎉 Correct! You solved the challenge.', type: 'success' });
         if (onSolved) onSolved();
+        fetchSolvedCount();
       } else {
-        if (onShowToast) onShowToast({ message: 'Incorrect flag. Please try again!', type: 'error' });
+        if (onShowToast) onShowToast({ message: '❌ Incorrect flag. Please try again!', type: 'error' });
       }
     } catch (e:any) {
       // Handle known errors
@@ -208,7 +195,38 @@ export default function ChallengeCard({ challenge, onSolved, isOwner, onDelete, 
   };
 
   if (!mounted) return null;
-  if (!metadata) return <div className="flex items-center justify-center h-40 text-blue-200 animate-pulse">Loading</div>;
+  if (!metadata) return (
+    <>
+      <style jsx>{`
+        .shimmer {
+          position: relative;
+          overflow: hidden;
+        }
+        .shimmer::after {
+          content: '';
+          position: absolute;
+          top: 0; left: 0; right: 0; bottom: 0;
+          z-index: 2;
+          pointer-events: none;
+          background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.18) 50%, rgba(255,255,255,0) 100%);
+          animation: shimmer 1.1s linear infinite;
+        }
+        @keyframes shimmer {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+      `}</style>
+      <div className="flex flex-col gap-3 p-6 h-80">
+        <div className="h-6 w-2/3 bg-gray-700 rounded shimmer" />
+        <div className="h-4 w-full bg-gray-800 rounded shimmer" />
+        <div className="h-4 w-1/2 bg-gray-800 rounded shimmer" />
+        <div className="h-4 w-1/3 bg-gray-800 rounded shimmer" />
+        <div className="h-8 w-full bg-gray-700 rounded mt-4 shimmer" />
+        <div className="h-4 w-1/4 bg-gray-800 rounded mt-2 shimmer" />
+        <div className="h-10 w-full bg-gray-700 rounded mt-4 shimmer" />
+      </div>
+    </>
+  );
   return (
     <div className={`bg-gradient-to-br from-[#232946] to-[#181c2f] border border-[#2e335a] rounded-2xl shadow-xl p-6 flex flex-col min-h-[340px] relative overflow-hidden group transition-transform duration-200 hover:scale-[1.03] ${editing ? 'ring-4 ring-blue-400 border-blue-400 bg-[#1a2540]' : ''}`}>
       <div className="flex items-center gap-2 mb-2">
@@ -255,7 +273,13 @@ export default function ChallengeCard({ challenge, onSolved, isOwner, onDelete, 
           </button>
         )}
       </div>
-      <p className="text-sm text-gray-200 mb-2 line-clamp-3">{metadata.description}</p>
+      <div className="flex items-center mb-2">
+        <p className="text-sm text-gray-200 flex-1 line-clamp-3 mb-0">{metadata.description}</p>
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-700/80 text-xs text-white rounded-full font-semibold shadow-lg ml-2" title="Number of users who solved this challenge">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m9-5a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+          {solvedCount ?? 0} solved
+        </span>
+      </div>
       <p className="text-xs text-purple-300 mb-4">Category: {metadata.category}</p>
       <div className="flex items-center justify-between text-xs mb-2">
         <span className="text-pink-300 font-semibold">Reward: <span className="font-mono">{challenge.reward} wei</span></span>
@@ -301,19 +325,26 @@ export default function ChallengeCard({ challenge, onSolved, isOwner, onDelete, 
         </>
       ) : (
         <div className="mt-auto">
-          <input
-            value={flag}
-            onChange={e => setFlag(e.target.value)}
-            placeholder="Enter flag"
-            className="w-full mb-2 bg-[#181c2f] border border-[#2e335a] text-gray-100 px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition disabled:opacity-60"
-            disabled={loading}
-          />
+          <div className="relative">
+            <input
+              value={isSolved ? '' : flag}
+              onChange={e => setFlag(e.target.value)}
+              placeholder="Enter flag"
+              className="w-full mb-2 bg-[#181c2f] border border-[#2e335a] text-gray-100 px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition disabled:opacity-60 pr-10"
+              disabled={loading || isSolved}
+            />
+          </div>
           <button
             onClick={submit}
-            disabled={loading || !flag}
+            disabled={loading || !flag || isSolved}
             className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-2 rounded-lg font-semibold shadow hover:from-blue-500 hover:to-purple-500 transition disabled:opacity-50"
           >
-            {loading ? '…' : 'Submit Flag'}
+            {isSolved ? (
+              <span className="inline-flex items-center justify-center gap-2">
+                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                Solved
+              </span>
+            ) : loading ? '…' : 'Submit Flag'}
           </button>
         </div>
       )}

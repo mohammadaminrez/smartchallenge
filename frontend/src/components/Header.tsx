@@ -2,14 +2,16 @@ import React, { useState, useEffect } from 'react';
 import ConnectButton from './ConnectButton';
 import { getContract, getContractBalance } from '../lib/contract';
 import { ethers } from 'ethers';
+import Modal from './Modal';
 
 interface HeaderProps {
   account: string | null;
   setAccount: (account: string | null) => void;
   isOwner: boolean;
+  onFunded?: () => void;
 }
 
-export default function Header({ account, setAccount, isOwner }: HeaderProps) {
+export default function Header({ account, setAccount, isOwner, onFunded }: HeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [fundLoading, setFundLoading] = useState(false);
   const [showFundDialog, setShowFundDialog] = useState(false);
@@ -39,6 +41,7 @@ export default function Header({ account, setAccount, isOwner }: HeaderProps) {
       const tx = await contract.fund({ value: wei });
       await tx.wait();
       setToast({ type: 'success', message: 'Funded successfully!' });
+      if (onFunded) onFunded();
       setShowFundDialog(false);
       setWeiInput('');
     } catch (err: any) {
@@ -144,8 +147,8 @@ export default function Header({ account, setAccount, isOwner }: HeaderProps) {
         </div>
       )}
       {showFundDialog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm">
-          <form onSubmit={handleFundSubmit} className="bg-[#181c2f] p-8 rounded-2xl shadow-2xl flex flex-col gap-5 min-w-[340px] border border-[#232946] animate-fade-in scale-95 animate-in">
+        <Modal open={showFundDialog} onClose={() => { setShowFundDialog(false); setWeiInput(''); }}>
+          <form onSubmit={handleFundSubmit} className="flex flex-col gap-5 min-w-[240px]">
             <h2 className="text-xl font-bold text-white mb-2 text-center">Fund Contract</h2>
             <div className="flex flex-col gap-2">
               <label className="text-sm text-blue-200 font-semibold" htmlFor="weiInput">Amount (wei)</label>
@@ -181,7 +184,7 @@ export default function Header({ account, setAccount, isOwner }: HeaderProps) {
               </button>
             </div>
           </form>
-        </div>
+        </Modal>
       )}
       {toast && (
         <div className={`fixed top-6 left-1/2 z-[100] -translate-x-1/2 px-6 py-3 rounded-xl shadow-lg font-semibold text-base transition-all animate-fade-in ${toast.type === 'success' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}`}

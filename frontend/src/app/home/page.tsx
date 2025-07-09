@@ -78,6 +78,12 @@ export default function Home() {
     }
   };
 
+  // Add a handler to update both challenges and leaderboard after edit
+  const handleChallengeUpdated = async () => {
+    await loadChallenges();
+    setLeaderboardRefresh(x => x + 1);
+  };
+
   // Add deleteChallenge function
   const deleteChallenge = async (challengeId: string) => {
     // Removed browser-native confirm; confirmation is handled in ChallengeCard modal
@@ -88,6 +94,7 @@ export default function Home() {
       await tx.wait();
       setToast({ message: 'Challenge deleted successfully.', type: 'success' });
       await loadChallenges();
+      setLeaderboardRefresh(x => x + 1);
     } catch (err: any) {
       let errorMsg = err?.reason || err?.message || 'Delete failed';
       if (err?.error?.message) errorMsg = err.error.message;
@@ -175,7 +182,6 @@ export default function Home() {
 
   // Filtering logic
   const filteredChallenges = challenges
-    .filter((ch) => ch.reward !== '0' && ch.difficulty !== 0)
     .filter((ch) => {
       if (filterCategory && ch.category !== filterCategory) return false;
       if (filterRewardMin && Number(ch.reward) < Number(filterRewardMin)) return false;
@@ -321,7 +327,7 @@ export default function Home() {
                       isOwner={isOwner}
                       onDelete={() => deleteChallenge(ch.challengeId)}
                       deleting={deletingId === ch.challengeId}
-                      onUpdated={loadChallenges}
+                      onUpdated={handleChallengeUpdated}
                       onShowToast={setToast}
                     />
                   </div>

@@ -22,7 +22,6 @@ contract SmartChallengeUpgradeable is Initializable, OwnableUpgradeable, UUPSUpg
         bool isRegistered;
         uint256 score;
         mapping(uint256 => bool) solvedChallenges;
-        string profileHash;
     }
 
     uint256 public challengeCounter;
@@ -30,10 +29,10 @@ contract SmartChallengeUpgradeable is Initializable, OwnableUpgradeable, UUPSUpg
     mapping(uint256 => Challenge) public challenges;
     mapping(address => Player) private players;
     address[] public playerAddresses;
+    uint256[] public activeChallengeIds;
 
     event ChallengeSubmitted(address indexed player, uint256 challengeId, bool correct);
     event ChallengeAdded(uint256 indexed challengeId, bytes32 flagHash, uint256 reward, string ipfsHash, uint8 difficulty);
-    event PlayerUpdated(address indexed player, string profileHash);
     event Funded(address indexed from, uint256 amount);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -68,6 +67,7 @@ contract SmartChallengeUpgradeable is Initializable, OwnableUpgradeable, UUPSUpg
         require(_reward > 0, "Reward must be > 0");
         require(_difficulty >= 1 && _difficulty <= 5, "Invalid difficulty");
         challenges[challengeCounter] = Challenge(challengeCounter, _flagHash, _reward, _ipfsHash, _difficulty, _submissionFee);
+        activeChallengeIds.push(challengeCounter);
         emit ChallengeAdded(challengeCounter, _flagHash, _reward, _ipfsHash, _difficulty);
         challengeCounter++;
     }
@@ -91,21 +91,16 @@ contract SmartChallengeUpgradeable is Initializable, OwnableUpgradeable, UUPSUpg
         emit ChallengeSubmitted(msg.sender, _challengeId, correct);
     }
 
-    function updatePlayerProfile(string calldata _profileHash) external {
-        players[msg.sender].profileHash = _profileHash;
-        emit PlayerUpdated(msg.sender, _profileHash);
-    }
-
     function getChallenges() external view returns (Challenge[] memory) {
-        Challenge[] memory list = new Challenge[](challengeCounter);
-        for (uint256 i = 0; i < challengeCounter; i++) {
-            list[i] = challenges[i];
+        Challenge[] memory list = new Challenge[](activeChallengeIds.length);
+        for (uint256 i = 0; i < activeChallengeIds.length; i++) {
+            list[i] = challenges[activeChallengeIds[i]];
         }
         return list;
     }
 
-    function getPlayer(address _player) external view returns (uint256 score, string memory profileHash) {
-        return (players[_player].score, players[_player].profileHash);
+    function getPlayer(address _player) external view returns (uint256 score) {
+        return players[_player].score;
     }
 
     function isChallengeSolved(address _player, uint256 _challengeId) external view returns (bool) {
@@ -129,6 +124,13 @@ contract SmartChallengeUpgradeable is Initializable, OwnableUpgradeable, UUPSUpg
     function deleteChallenge(uint256 challengeId) external onlyOwner {
         require(challenges[challengeId].reward > 0, "Challenge does not exist");
         delete challenges[challengeId];
+        for (uint256 i = 0; i < activeChallengeIds.length; i++) {
+            if (activeChallengeIds[i] == challengeId) {
+                activeChallengeIds[i] = activeChallengeIds[activeChallengeIds.length - 1];
+                activeChallengeIds.pop();
+                break;
+            }
+        }
     }
 
     function updateChallenge(
@@ -157,5 +159,13 @@ contract SmartChallengeUpgradeable is Initializable, OwnableUpgradeable, UUPSUpg
 
     receive() external payable {
         emit Funded(msg.sender, msg.value);
+    }
+
+    function getActiveChallengeIds() external view returns (uint256[] memory) {
+        return activeChallengeIds;
+    }
+
+    function getPlayerAddresses() external view returns (address[] memory) {
+        return playerAddresses;
     }
 }

@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, forwardRef, useImperativeHandle } from 'react';
 import { getContract, getProvider, getChallenges, updateChallenge } from '../lib/contract';
 import { ethers } from 'ethers';
 import { challengeTemplates } from '../lib/challengeTemplates';
 
-export default function AdminPanel({ onChallengeAdded, onShowToast }: { onChallengeAdded?: () => void, onShowToast?: (toast: { message: string; type: 'success' | 'error' }) => void }) {
+const AdminPanel = forwardRef(function AdminPanel({ onChallengeAdded, onShowToast }, ref) {
   const [mounted, setMounted] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
   const [paused, setPaused] = useState(false);
@@ -42,6 +42,14 @@ export default function AdminPanel({ onChallengeAdded, onShowToast }: { onChalle
   };
 
   useEffect(() => { setMounted(true); }, []);
+
+  async function refreshBalance() {
+    const provider = getProvider();
+    const bal = await provider.getBalance(process.env.NEXT_PUBLIC_CONTRACT_ADDRESS!);
+    setBalance(bal.toString());
+  }
+
+  useImperativeHandle(ref, () => ({ refreshBalance }), [refreshBalance]);
 
   useEffect(() => {
     async function loadAdminState() {
@@ -398,5 +406,7 @@ export default function AdminPanel({ onChallengeAdded, onShowToast }: { onChalle
       </section>
     </div>
   );
-}
+});
+
+export default AdminPanel;
 

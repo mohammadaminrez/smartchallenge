@@ -2,8 +2,8 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "/Users/mars/Downloads/Blockchain/contracts/SmartChallengeUpgradeable.sol": {
-      "lastModificationDate": 1752052064831,
-      "contentHash": "1ba084dedf5f7f550bd5333e984c6a3b",
+      "lastModificationDate": 1752059397042,
+      "contentHash": "8fb8e5d3adfdcf91885852547b59701d",
       "sourceName": "contracts/SmartChallengeUpgradeable.sol",
       "solcConfig": {
         "version": "0.8.20",

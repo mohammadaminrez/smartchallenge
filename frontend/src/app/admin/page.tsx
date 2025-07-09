@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import AdminPanel from '../../components/AdminPanel';
 import { getContract, getProvider } from '../../lib/contract';
 import ConnectButton from '../../components/ConnectButton';
@@ -12,6 +12,7 @@ export default function AdminPage() {
   const [account, setAccount] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const adminPanelRef = useRef<any>(null);
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -80,7 +81,7 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#181c2f] via-[#232946] to-[#121212] text-gray-100 font-sans">
-      <Header account={account} setAccount={setAccount} isOwner={!!isOwner} />
+      <Header account={account} setAccount={setAccount} isOwner={!!isOwner} onFunded={() => adminPanelRef.current?.refreshBalance()} />
       <main className="max-w-3xl mx-auto p-8">
         {/* Toast notification */}
         {toast && (
@@ -90,7 +91,7 @@ export default function AdminPage() {
             {toast.message}
           </div>
         )}
-        <AdminPanel onShowToast={setToast} />
+        <AdminPanel ref={adminPanelRef} onShowToast={setToast} />
         {/* Add more admin sections here in the future */}
       </main>
     </div>

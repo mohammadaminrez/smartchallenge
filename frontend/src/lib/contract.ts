@@ -65,3 +65,8 @@ export async function getContractBalance() {
   return await provider.getBalance(ADDR);
 }
 
+export async function getPlayerAddresses() {
+  const contract = await getContract();
+  return await contract.getPlayerAddresses();
+}
+
