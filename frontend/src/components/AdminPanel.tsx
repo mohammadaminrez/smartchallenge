@@ -1,11 +1,20 @@
 'use client';
 
-import React, { useEffect, useState, forwardRef, useImperativeHandle } from 'react';
+import React, { useEffect, useState, forwardRef, useImperativeHandle, Ref, Dispatch, SetStateAction } from 'react';
 import { getContract, getProvider, getChallenges, updateChallenge } from '../lib/contract';
 import { ethers } from 'ethers';
 import { challengeTemplates } from '../lib/challengeTemplates';
 
-const AdminPanel = forwardRef(function AdminPanel({ onChallengeAdded, onShowToast }, ref) {
+type ToastType = { message: string; type: 'success' | 'error' };
+type AdminPanelProps = {
+  onShowToast?: Dispatch<SetStateAction<ToastType | null>>;
+  onChallengeAdded?: () => void;
+};
+
+const AdminPanel = forwardRef(function AdminPanel(
+  { onChallengeAdded, onShowToast }: AdminPanelProps,
+  ref: Ref<any>
+) {
   const [mounted, setMounted] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
   const [paused, setPaused] = useState(false);
